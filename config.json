@@ -3,19 +3,19 @@
     "label": "Host",
     "type": "String",
     "required": true,
-    "help": "Application URL from SAP HANA Cockpit"
+    "help": "The SAP-HCP Host to send data to"
   },
   "username": {
     "label": "REST API Login",
     "type": "String",
     "required": true,
-    "help": "Username to use for authenticating requests to the SAP HANA REST API."
+    "help": "The SAP-HCP account Username."
   },
   "password": {
     "label": "REST API Password",
-    "type": "String",
+    "type": "Password",
     "required": true,
-    "help": "Password to use for authenticating requests to the SIGFOX REST API."
+    "help": "The SAP-HCP account Password."
   },
   "device_type": {
     "label": "Device Type ID",

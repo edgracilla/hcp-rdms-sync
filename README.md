@@ -1,10 +1,19 @@
-# Device Sync Plugin Seed
+# SAP HCP RDMS Device Sync
 
-[![Build Status](https://travis-ci.org/Reekoh/device-sync-plugin-seed.svg)](https://travis-ci.org/Reekoh/device-integration-plugin-seed)
-![Dependencies](https://img.shields.io/david/Reekoh/device-sync-plugin-seed.svg)
-![Dependencies](https://img.shields.io/david/dev/Reekoh/device-sync-plugin-seed.svg)
+[![Build Status](https://travis-ci.org/Reekoh/hcp-rdms-sync.svg)](https://travis-ci.org/Reekoh/hcp-rdms-sync)
+![Dependencies](https://img.shields.io/david/Reekoh/hcp-rdms-sync.svg)
+![Dependencies](https://img.shields.io/david/dev/Reekoh/hcp-rdms-sync.svg)
 ![Built With](https://img.shields.io/badge/built%20with-gulp-red.svg)
 
-### Docs & Wiki
+##Description
 
-For more information about Reekoh Plugin Development, please see the [Plugin Development Docs](https://help.reekoh.com/docs/plugin-development-overview) section in our Help Center. The documentation for the Device Sync Plugin API can also be found on the [Device Sync Plugin API](https://help.reekoh.com/docs/device-sync-plugin-api) section.
+SAP HCP Device Sync Plugin for Reekoh IoT Platform.
+
+## Configuration
+
+1. Host - The SAP-HCP Host to send data to.
+2. Username - The SAP-HCP account Username.
+3. Password -  The SAP-HCP Password.
+4. Device Type - ID of the device type.
+
+These parameters are then injected to the plugin from the platform.
