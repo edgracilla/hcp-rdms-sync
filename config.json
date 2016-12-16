@@ -1,0 +1,26 @@
+{
+  "host": {
+    "label": "Host",
+    "type": "String",
+    "required": true,
+    "help": "The SAP-HCP Host to send data to"
+  },
+  "username": {
+    "label": "Username",
+    "type": "String",
+    "required": true,
+    "help": "Username to use for API Basic Authentication."
+  },
+  "password": {
+    "label": "Password",
+    "type": "Password",
+    "required": true,
+    "help": "Password to use for API Basic Authentication."
+  },
+  "device_type": {
+    "label": "Device Type ID",
+    "type": "String",
+    "required": true,
+    "help": "ID of the device type."
+  }
+}
