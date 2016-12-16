@@ -9,13 +9,13 @@
     "label": "Username",
     "type": "String",
     "required": true,
-    "help": "The SAP-HCP account Username."
+    "help": "Username to use for API Basic Authentication."
   },
   "password": {
     "label": "Password",
     "type": "Password",
     "required": true,
-    "help": "The SAP-HCP account Password."
+    "help": "Password to use for API Basic Authentication."
   },
   "device_type": {
     "label": "Device Type ID",
