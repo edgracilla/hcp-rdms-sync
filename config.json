@@ -6,13 +6,13 @@
     "help": "The SAP-HCP Host to send data to"
   },
   "username": {
-    "label": "REST API Login",
+    "label": "Username",
     "type": "String",
     "required": true,
     "help": "The SAP-HCP account Username."
   },
   "password": {
-    "label": "REST API Password",
+    "label": "Password",
     "type": "Password",
     "required": true,
     "help": "The SAP-HCP account Password."

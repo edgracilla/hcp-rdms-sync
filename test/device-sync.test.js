@@ -1,10 +1,7 @@
-/*
- * Just a sample code to test the device sync plugin.
- * Kindly write your own unit tests for your own plugin.
- */
+
 'use strict';
 
-var cp     = require('child_process'),
+var cp   = require('child_process'),
 	assert = require('assert'),
 	deviceSync;
 
