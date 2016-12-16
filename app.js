@@ -1,10 +1,10 @@
 'use strict';
 
-var platform 		= require('./platform'),
-	isArray 		= require('lodash.isarray'),
-	isPlainObject 	= require('lodash.isplainobject'),
-	requestPromise 	= require('request-promise'),
-	async 			= require('async'),
+var platform        = require('./platform'),
+	isArray         = require('lodash.isarray'),
+	isPlainObject   = require('lodash.isplainobject'),
+	requestPromise  = require('request-promise'),
+	async           = require('async'),
 	_config;
 
 // used in mocha test notif
