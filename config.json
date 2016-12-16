@@ -1,0 +1,26 @@
+{
+  "host": {
+    "label": "Host",
+    "type": "String",
+    "required": true,
+    "help": "Application URL from SAP HANA Cockpit"
+  },
+  "username": {
+    "label": "REST API Login",
+    "type": "String",
+    "required": true,
+    "help": "Username to use for authenticating requests to the SAP HANA REST API."
+  },
+  "password": {
+    "label": "REST API Password",
+    "type": "String",
+    "required": true,
+    "help": "Password to use for authenticating requests to the SIGFOX REST API."
+  },
+  "device_type": {
+    "label": "Device Type ID",
+    "type": "String",
+    "required": true,
+    "help": "ID of the device type."
+  }
+}
