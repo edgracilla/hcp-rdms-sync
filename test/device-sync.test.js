@@ -1,146 +1,141 @@
+/* global describe, it, after, before */
+'use strict'
 
-'use strict';
+const cp = require('child_process')
+const should = require('should')
 
-var cp   = require('child_process'),
-	assert = require('assert'),
-	deviceSync;
+const amqp = require('amqplib')
+
+let deviceSync = null
+let _channel = {}
+let _conn = null
 
 describe('Device Sync', function () {
-  this.slow(5000);
+  let dummyId = `${Date.now() + 1}`
 
-  let dummy_id = `${Date.now() + 1}`;
+  before('init', () => {
+    process.env.PLUGIN_ID = 'demo.dev-sync'
+    process.env.BROKER = 'amqp://guest:guest@127.0.0.1/'
+
+    amqp.connect(process.env.BROKER)
+      .then((conn) => {
+        _conn = conn
+        return conn.createChannel()
+      }).then((channel) => {
+        _channel = channel
+      }).catch((err) => {
+        console.log(err)
+      })
+  })
 
   after('terminate child process', function () {
-    deviceSync.kill('SIGKILL');
-  });
+    this.timeout(5000)
 
-  describe('#spawn', function () {
-    it('should spawn a child process', function () {
-      assert.ok(deviceSync = cp.fork(process.cwd()), 'Child process not spawned.');
-    });
-  });
+    setTimeout(() => {
+      _conn.close()
+      deviceSync.kill('SIGKILL')
+    }, 4500)
+  })
 
-  describe('#handShake', function () {
+  describe('#spawn', () => {
+    it('should spawn a child process', () => {
+      should.ok(deviceSync = cp.fork(process.cwd()), 'Child process not spawned.')
+    })
+  })
+
+  describe('#handShake', () => {
     it('should notify the parent process when ready within 5 seconds', function (done) {
-      this.timeout(5000);
+      this.timeout(5000)
 
       deviceSync.on('message', function (message) {
-        if (message.type === 'ready')
-          done();
-      });
+        if (message.type === 'ready') { done() }
+      })
+    })
+  })
 
-      deviceSync.send({
-        type: 'ready',
-        data: {
-          options: {
-            host: 'iotrdmsiotservices-p1942340584trial.hanatrial.ondemand.com',
-            username: 'adinglasan@reekoh.com',
-            password: 'Feb?0593',
-            device_type: '098c95c948ab5b113d21'
-          }
-        }
-      }, function (error) {
-        assert.ifError(error);
-      });
-    });
-  });
-
-  describe('#adddevice', function () {
+  describe('#adddevice', () => {
     it('should add the device', function (done) {
-      this.timeout(10000);
+      this.timeout(10000)
+
+      let dummyData = {
+        operation: 'adddevice',
+        device: {
+          _id: dummyId,
+          name: `dummy${dummyId}`,
+          attributes: [
+            { key: 'SerialNumber', value: 'SN 5121982812' },
+            { key: 'IPv4', value: '127.0.0.1' }
+          ]
+        }}
+
+      // send data to rabbitMQ
+      _channel.sendToQueue(process.env.PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
+
+      // plugin will fetch data from rabbit, process it and will emit 'adddevice' to plugin
+      // our app.js (child process) will send system message to parent process (this file)
+      // once 'adddevice' has been processed
 
       deviceSync.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'POST') 
-          done();
-      });
-
-      deviceSync.send({
-        type: 'adddevice',
-        data: {
-          _id: dummy_id,
-          name: `dummy${dummy_id}`,
-          attributes: [
-            {
-              key: 'SerialNumber',
-              value: 'SN 5121982812'
-            },
-            {
-              key: 'IPv4',
-              value: '127.0.0.1'
-            }
-          ]
-        }
-      });
-
-    });
-  });
+        if (msg.done === true && msg.method === 'POST') { done() }
+      })
+    })
+  })
 
   describe('#updatedevice', function () {
     it('should update the device', function (done) {
-      this.timeout(10000);
+      this.timeout(10000)
+
+      let dummyData = {
+        operation: 'updatedevice',
+        device: {
+          _id: dummyId,
+          name: `dummy${dummyId}`,
+          attributes: [
+            { key: 'SerialNumber', value: 'xxx' },
+            { key: 'IPv4', value: 'xxx' }
+          ]
+        }}
+
+      _channel.sendToQueue(process.env.PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
 
       deviceSync.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'PATCH') 
-          done();
-      });
-
-      deviceSync.send({
-        type: 'updatedevice',
-        data: {
-          _id: dummy_id,
-        
-          attributes: [
-            {
-              key: 'SerialNumber',
-              value: 'xxx'
-            },
-            {
-              key: 'IPv4',
-              value: 'xxx'
-            }
-          ]
+        if (msg.done === true && msg.method === 'PATCH') {
+          done()
         }
-      });
-
-    });
-  });
+      })
+    })
+  })
 
   describe('#removedevice', function () {
     it('should remove the device', function (done) {
-      this.timeout(10000);
+      this.timeout(10000)
+
+      let dummyData = {
+        operation: 'removedevice',
+        device: {
+          _id: dummyId,
+          name: `dummy${dummyId}`
+        }}
+
+      _channel.sendToQueue(process.env.PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
 
       deviceSync.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'DELETE') 
-          done();
-      });
-
-      deviceSync.send({
-        type: 'removedevice',
-        data: {
-          _id: dummy_id
+        if (msg.done === true && msg.method === 'DELETE') {
+          done()
         }
-      });
-
-    });
-  });
+      })
+    })
+  })
 
   describe('#sync', function () {
     it('should execute device sync', function (done) {
-      this.timeout(10000);
+      this.timeout(10000)
+
+      _channel.sendToQueue(process.env.PLUGIN_ID, new Buffer(JSON.stringify({ operation: 'sync' })))
 
       deviceSync.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'GET') 
-          done();
-      });
-
-      deviceSync.send({
-        type: 'sync',
-        data: {
-          last_sync_dt: (new Date())
-        }
-      });
-
-    });
-  });
-
-});
+        if (msg.done === true && msg.method === 'GET') { done() }
+      })
+    })
+  })
+})

@@ -1,33 +1,31 @@
 {
-  "name": "hcp-rdms-sync",
-  "description": "SAP HCP Device Sync Plugin for Reekoh IoT Platform.",
+  "name": "device-sync",
   "version": "1.0.0",
-  "author": "Reekoh, Inc.",
+  "description": "DeviceSync plugin seed",
   "main": "app.js",
   "scripts": {
     "test": "gulp test"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Reekoh/hcp-rdms-sync"
-  },
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-cli": "^1.2.2",
-    "gulp-jshint": "^2.0.1",
-    "gulp-json-lint": "^0.1.0",
-    "gulp-mocha": "^2.2.0",
-    "gulp-plumber": "^1.1.0",
-    "jshint": "^2.9.2",
-    "mocha": "^2.5.3",
-    "should": "^10.0.0"
-  },
+  "author": "Reekoh, Inc.",
   "license": "LGPL-3.0",
   "dependencies": {
     "async": "^2.1.4",
+    "demo-reekoh-node": "^1.0.0",
     "lodash.isarray": "^4.0.0",
     "lodash.isplainobject": "^4.0.6",
     "request": "^2.79.0",
     "request-promise": "^4.1.1"
+  },
+  "devDependencies": {
+    "amqplib": "^0.5.1",
+    "gulp": "^3.9.1",
+    "gulp-cli": "^1.2.1",
+    "gulp-jshint": "^2.0.4",
+    "gulp-json-lint": "^0.1.0",
+    "gulp-mocha": "^2.2.0",
+    "gulp-plumber": "^1.1.0",
+    "jshint": "^2.9.4",
+    "mocha": "^2.5.3",
+    "should": "^9.0.2"
   }
 }
