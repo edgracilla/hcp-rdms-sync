@@ -9,19 +9,13 @@ const isPlainObject = require('lodash.isplainobject')
 const async = require('async')
 
 let _config = {
-  host: 'iotrdmsiotservices-p1942340584trial.hanatrial.ondemand.com',
-  username: 'adinglasan@reekoh.com',
-  password: 'Feb?0593',
-  device_type: '098c95c948ab5b113d21'
+  host: process.env.HCP_RDMS_HOST,
+  username: process.env.HCP_RDMS_USERNAME,
+  password: process.env.HCP_RDMS_PASSWORD,
+  device_type: process.env.HCP_RDMS_DEVICE_TYPE
 }
 
 let _notifyDone = (method) => {
-  if (method === 'ready') {
-    setImmediate(() => {
-      process.send({ type: 'ready' })
-    })
-  }
-
   process.send({ done: true, method: method })
 }
 
@@ -91,7 +85,7 @@ let _processRequest = (action, device, callback) => {
 
 _plugin.once('ready', () => {
   _plugin.log('Device sync has been initialized.')
-  _notifyDone('ready')
+  setImmediate(() => { process.send({ type: 'ready' }) }) // for mocha
 })
 
 _plugin.on('sync', () => {

@@ -11,11 +11,16 @@ let _channel = {}
 let _conn = null
 
 describe('Device Sync', function () {
-  let dummyId = `${Date.now() + 1}`
+  // let dummyId = `${Date.now() + 1}`
 
   before('init', () => {
     process.env.PLUGIN_ID = 'demo.dev-sync'
     process.env.BROKER = 'amqp://guest:guest@127.0.0.1/'
+
+    process.env.HCP_RDMS_HOST = 'iotrdmsiotservices-p1942340584trial.hanatrial.ondemand.com'
+    process.env.HCP_RDMS_USERNAME = 'adinglasan@reekoh.com'
+    process.env.HCP_RDMS_PASSWORD = 'Feb?0593'
+    process.env.HCP_RDMS_DEVICE_TYPE = '098c95c948ab5b113d21'
 
     amqp.connect(process.env.BROKER)
       .then((conn) => {
