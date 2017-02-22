@@ -1,28 +1,16 @@
 'use strict'
 
-const reekoh = require('demo-reekoh-node')
-const _plugin = new reekoh.plugins.DeviceSync()
+const reekoh = require('reekoh')
+const _plugin = new reekoh.plugins.InventorySync()
 
-const requestPromise = require('request-promise')
-const isArray = require('lodash.isarray')
-const isPlainObject = require('lodash.isplainobject')
 const async = require('async')
-
-let _config = {
-  host: process.env.HCP_RDMS_HOST,
-  username: process.env.HCP_RDMS_USERNAME,
-  password: process.env.HCP_RDMS_PASSWORD,
-  device_type: process.env.HCP_RDMS_DEVICE_TYPE
-}
-
-let _notifyDone = (method) => {
-  process.send({ done: true, method: method })
-}
+const requestPromise = require('request-promise')
+const isPlainObject = require('lodash.isplainobject')
 
 let _processRequest = (action, device, callback) => {
   let params = {}
   let logTitle = ''
-  let apiUrl = `https://${_config.host}/com.sap.iotservices.dms/v2/api/devices`
+  let apiUrl = `https://${_plugin.config.host}/com.sap.iotservices.dms/v2/api/devices`
 
   if (!isPlainObject(device)) { return _plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${device}`)) }
 
@@ -55,7 +43,7 @@ let _processRequest = (action, device, callback) => {
       params.body = {
         id: device._id,
         name: device.name,
-        deviceType: _config.device_type,
+        deviceType: _plugin.config.device_type,
         attributes: device.attributes
       }
 
@@ -63,24 +51,21 @@ let _processRequest = (action, device, callback) => {
   }
 
   params.json = true
-  params.auth = { user: _config.username, pass: _config.password }
+  params.auth = { user: _plugin.config.username, pass: _plugin.config.password }
 
-  requestPromise(params)
-    .then((object) => {
-      if (action === 'sync') {
-        return callback(object)
-      }
+  requestPromise(params).then((object) => {
+    if (action === 'sync') return callback(object)
 
-      _notifyDone(params.method)
-      _plugin.log(JSON.stringify({
-        title: logTitle,
-        data: object
-      }))
-    })
-    .catch((error) => {
-      _notifyDone(params.method)
-      _plugin.logException(error)
-    })
+    process.send({ done: true, method: params.method })
+
+    _plugin.log(JSON.stringify({
+      title: logTitle,
+      data: object
+    }))
+  }).catch((error) => {
+    process.send({ done: true, method: params.method })
+    _plugin.logException(error)
+  })
 }
 
 _plugin.once('ready', () => {
@@ -90,26 +75,23 @@ _plugin.once('ready', () => {
 
 _plugin.on('sync', () => {
   _processRequest('sync', {}, (devices) => {
-    if (!isArray(devices)) {
+    if (!Array.isArray(devices)) {
       return _plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${devices}`))
     }
 
-    async.each(devices, (device, done) => {
+    async.each(devices, (device, cb) => {
       let param = {
         _id: device.id,
         name: device.name,
         metadata: device.attributes ? { sap: { attributes: device.attributes } } : { /* empty */ }
       }
 
-      _plugin.syncDevice(param, done)
-        .then(() => {
-          done()
-        }).catch((err) => {
-          done(err)
-        })
+      _plugin.syncDevice(param).then(() => {
+        cb()
+      }).catch(cb)
     }, (err) => {
       if (err) return console.log(err)
-      _notifyDone('GET')
+      process.send({ done: true, method: 'GET' })
     })
   })
 })

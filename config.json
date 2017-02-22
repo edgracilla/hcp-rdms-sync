@@ -17,7 +17,7 @@
     "required": true,
     "help": "Password to use for API Basic Authentication."
   },
-  "device_type": {
+  "deviceType": {
     "label": "Device Type ID",
     "type": "String",
     "required": true,
