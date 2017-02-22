@@ -15,8 +15,8 @@ let conf = {
   password: 'Feb?0593'
 }
 
+let _app = null
 let _conn = null
-let _plugin = null
 let _channel = null
 
 describe('HCP-RDMS Device Sync', function () {
@@ -42,13 +42,13 @@ describe('HCP-RDMS Device Sync', function () {
 
     setTimeout(() => {
       _conn.close()
-      _plugin.kill('SIGKILL')
+      _app.kill('SIGKILL')
     }, 4500)
   })
 
   describe('#spawn', () => {
     it('should spawn a child process', () => {
-      should.ok(_plugin = cp.fork(process.cwd()), 'Child process not spawned.')
+      should.ok(_app = cp.fork(process.cwd()), 'Child process not spawned.')
     })
   })
 
@@ -56,7 +56,7 @@ describe('HCP-RDMS Device Sync', function () {
     it('should notify the parent process when ready within 5 seconds', function (done) {
       this.timeout(10000)
 
-      _plugin.on('message', function (message) {
+      _app.on('message', function (message) {
         if (message.type === 'ready') { done() }
       })
     })
@@ -84,7 +84,7 @@ describe('HCP-RDMS Device Sync', function () {
       // our app.js (child process) will send system message to parent process (this file)
       // once 'adddevice' has been processed
 
-      _plugin.on('message', (msg) => {
+      _app.on('message', (msg) => {
         if (msg.done === true && msg.method === 'POST') { done() }
       })
     })
@@ -108,7 +108,7 @@ describe('HCP-RDMS Device Sync', function () {
 
       _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
 
-      _plugin.on('message', (msg) => {
+      _app.on('message', (msg) => {
         if (msg.done === true && msg.method === 'PATCH') {
           done()
         }
@@ -129,7 +129,7 @@ describe('HCP-RDMS Device Sync', function () {
 
       _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
 
-      _plugin.on('message', (msg) => {
+      _app.on('message', (msg) => {
         if (msg.done === true && msg.method === 'DELETE') {
           done()
         }
@@ -143,7 +143,7 @@ describe('HCP-RDMS Device Sync', function () {
 
       _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify({ operation: 'sync' })))
 
-      _plugin.on('message', (msg) => {
+      _app.on('message', (msg) => {
         if (msg.done === true && msg.method === 'GET') { done() }
       })
     })
