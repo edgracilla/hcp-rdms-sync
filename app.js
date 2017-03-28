@@ -1,7 +1,7 @@
 'use strict'
 
 const reekoh = require('reekoh')
-const _plugin = new reekoh.plugins.InventorySync()
+const plugin = new reekoh.plugins.InventorySync()
 
 const async = require('async')
 const requestPromise = require('request-promise')
@@ -10,9 +10,9 @@ const isPlainObject = require('lodash.isplainobject')
 let _processRequest = (action, device, callback) => {
   let params = {}
   let logTitle = ''
-  let apiUrl = `https://${_plugin.config.host}/com.sap.iotservices.dms/v2/api/devices`
+  let apiUrl = `https://${plugin.config.host}/com.sap.iotservices.dms/v2/api/devices`
 
-  if (!isPlainObject(device)) { return _plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${device}`)) }
+  if (!isPlainObject(device)) { return plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${device}`)) }
 
   switch (action) {
 
@@ -43,7 +43,7 @@ let _processRequest = (action, device, callback) => {
       params.body = {
         id: device._id,
         name: device.name,
-        deviceType: _plugin.config.device_type,
+        deviceType: plugin.config.device_type,
         attributes: device.attributes
       }
 
@@ -51,59 +51,63 @@ let _processRequest = (action, device, callback) => {
   }
 
   params.json = true
-  params.auth = { user: _plugin.config.username, pass: _plugin.config.password }
+  params.auth = { user: plugin.config.username, pass: plugin.config.password }
 
   requestPromise(params).then((object) => {
     if (action === 'sync') return callback(object)
 
-    process.send({ done: true, method: params.method })
+    plugin.emit(`${params.method}_OK`)
 
-    _plugin.log(JSON.stringify({
+    plugin.log(JSON.stringify({
       title: logTitle,
       data: object
     }))
   }).catch((error) => {
-    process.send({ done: true, method: params.method })
-    _plugin.logException(error)
+    plugin.logException(error)
+    console.log(error)
   })
 }
 
-_plugin.once('ready', () => {
-  _plugin.log('Device sync has been initialized.')
-  setImmediate(() => { process.send({ type: 'ready' }) }) // for mocha
+plugin.once('ready', () => {
+  plugin.log('Device sync has been initialized.')
+  plugin.emit('init')
 })
 
-_plugin.on('sync', () => {
+plugin.on('sync', () => {
   _processRequest('sync', {}, (devices) => {
     if (!Array.isArray(devices)) {
-      return _plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${devices}`))
+      return plugin.logException(new Error(`Invalid data received. Data must be a valid Array/JSON Object or a collection of objects. Data: ${devices}`))
     }
 
     async.each(devices, (device, cb) => {
       let param = {
         _id: device.id,
         name: device.name,
-        metadata: device.attributes ? { sap: { attributes: device.attributes } } : { /* empty */ }
+        metadata: device.attributes
+          ? { sap: { attributes: device.attributes } }
+          : { /* empty */ }
       }
 
-      _plugin.syncDevice(param).then(() => {
+      plugin.syncDevice(param).then(() => {
         cb()
       }).catch(cb)
     }, (err) => {
       if (err) return console.log(err)
-      process.send({ done: true, method: 'GET' })
+      plugin.emit('GET_OK')
     })
   })
 })
 
-_plugin.on('adddevice', (device) => {
+plugin.on('adddevice', (device) => {
   _processRequest('add', device)
 })
 
-_plugin.on('updatedevice', (device) => {
+plugin.on('updatedevice', (device) => {
   _processRequest('update', device)
 })
 
-_plugin.on('removedevice', (device) => {
+plugin.on('removedevice', (device) => {
   _processRequest('remove', device)
 })
+
+module.exports = plugin

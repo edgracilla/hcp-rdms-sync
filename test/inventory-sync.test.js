@@ -19,7 +19,7 @@ let _app = null
 let _conn = null
 let _channel = null
 
-describe('HCP-RDMS Device Sync', function () {
+describe('HCP-RDMS Inventory Sync', function () {
   let dummyId = `${Date.now() + 1}`
 
   before('init', () => {
@@ -37,28 +37,15 @@ describe('HCP-RDMS Device Sync', function () {
     })
   })
 
-  after('terminate child process', function () {
-    this.timeout(10000)
-
-    setTimeout(() => {
-      _conn.close()
-      _app.kill('SIGKILL')
-    }, 4500)
+  after('terminate', function () {
+    _conn.close()
   })
 
-  describe('#spawn', () => {
-    it('should spawn a child process', () => {
-      should.ok(_app = cp.fork(process.cwd()), 'Child process not spawned.')
-    })
-  })
-
-  describe('#handShake', () => {
-    it('should notify the parent process when ready within 5 seconds', function (done) {
+  describe('#start', function () {
+    it('should start the app', function (done) {
       this.timeout(10000)
-
-      _app.on('message', function (message) {
-        if (message.type === 'ready') { done() }
-      })
+      _app = require('../app')
+      _app.once('init', done)
     })
   })
 
@@ -66,7 +53,7 @@ describe('HCP-RDMS Device Sync', function () {
     it('should add the device', function (done) {
       this.timeout(10000)
 
-      let dummyData = {
+      _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify({
         operation: 'adddevice',
         device: {
           _id: dummyId,
@@ -75,18 +62,10 @@ describe('HCP-RDMS Device Sync', function () {
             { key: 'SerialNumber', value: 'SN 5121982812' },
             { key: 'IPv4', value: '127.0.0.1' }
           ]
-        }}
+        }
+      })))
 
-      // send data to rabbitMQ
-      _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
-
-      // plugin will fetch data from rabbit, process it and will emit 'adddevice' to plugin
-      // our app.js (child process) will send system message to parent process (this file)
-      // once 'adddevice' has been processed
-
-      _app.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'POST') { done() }
-      })
+      _app.on('POST_OK', done)
     })
   })
 
@@ -94,7 +73,7 @@ describe('HCP-RDMS Device Sync', function () {
     it('should update the device', function (done) {
       this.timeout(10000)
 
-      let dummyData = {
+      _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify({
         operation: 'updatedevice',
         device: {
           _id: dummyId,
@@ -104,15 +83,9 @@ describe('HCP-RDMS Device Sync', function () {
             { key: 'IPv4', value: 'xxx' }
           ]
         }
-      }
+      })))
 
-      _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
-
-      _app.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'PATCH') {
-          done()
-        }
-      })
+      _app.on('PATCH_OK', done)
     })
   })
 
@@ -120,32 +93,23 @@ describe('HCP-RDMS Device Sync', function () {
     it('should remove the device', function (done) {
       this.timeout(10000)
 
-      let dummyData = {
+      _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify({
         operation: 'removedevice',
         device: {
           _id: dummyId,
           name: `dummy${dummyId}`
-        }}
-
-      _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify(dummyData)))
-
-      _app.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'DELETE') {
-          done()
         }
-      })
+      })))
+
+      _app.on('DELETE_OK', done)
     })
   })
 
   describe('#sync', function () {
     it('should execute device sync', function (done) {
       this.timeout(10000)
-
       _channel.sendToQueue(PLUGIN_ID, new Buffer(JSON.stringify({ operation: 'sync' })))
-
-      _app.on('message', (msg) => {
-        if (msg.done === true && msg.method === 'GET') { done() }
-      })
+      _app.on('GET_OK', done)
     })
   })
 })
